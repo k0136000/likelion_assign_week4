@@ -3,15 +3,8 @@ import createHttpError from 'http-errors';
 
 const router = Router();
 
-router.get('/', (req, res) => {
-  if (!req.body.id) {
-    throw new createHttpError.BadRequest('없다.');
-  }
-  res.send('get');
-});
-
 let nextId = 2;
-let texts = [
+let posts = [
   {
     id: 1,
     title: 'Avengers',
@@ -21,46 +14,52 @@ let texts = [
     title: 'Harry poter',
   },
 ];
-
-router.get('/text', (req, res) => {
-  res.json(texts);
+router.get('/', (req, res) => {
+  if (!req.body.id) {
+    throw new createHttpError.BadRequest('등록된 글이 없습니다.');
+  }
+  res.send(posts);
 });
 
-router.get('/text', (req, res) => {
-  const index = texts.findIndex((text) => text.id === req.body.id);
-  if (index === -1) {
-    return res.json({
-      error: 'Writing does not exist',
-    });
+router.get('/:postId', (req, res) => {
+  const { postId } = req.params;
+  if (!posts[postId - 1]) {
+    throw new createHttpError.BadRequest('post not exist');
   }
-  return res.json(texts.filter((text) => text.id === req.body.id)[0]);
+  return res.json({
+    data: posts[postId - 1],
+  });
 });
 
 router.post('/', (req, res) => {
-  texts.push({
+  posts.push({
     // eslint-disable-next-line no-plusplus
     id: nextId++,
     title: req.body.title,
   });
-  res.json(texts);
+  res.json(posts);
 });
 
-router.put('/texts', (req, res) => {
-  const index = texts.findIndex((text) => text.id === req.body.id);
+router.put('/:postId', (req, res) => {
+  const { postId } = req.params;
+  const index = posts.findIndex((text) => text.id === postId);
   if (index === -1) {
     throw createHttpError.NotFound('Writing does not exist');
   }
 
-  texts[index] = {
-    id: req.body.id,
+  posts[index] = {
+    id: postId,
     title: req.body.title,
   };
-  res.json(texts);
+  res.json(posts);
 });
 
-router.delete('/texts', (req, res) => {
-  texts = texts.filter((text) => text.id !== req.body.id);
-  res.json(texts);
+router.delete('/:postId', (req, res) => {
+  const { postId } = req.params;
+  posts = posts.find((post) => post.id !== postId);
+  // eslint-disable-next-line no-plusplus
+  nextId--;
+  res.json(posts);
 });
 
 export default router;
